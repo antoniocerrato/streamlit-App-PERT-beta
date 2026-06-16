@@ -126,6 +126,43 @@ P(T\leq d)=F_T(d),
 
 donde `F_T` es la función de distribución acumulada de Beta-PERT.
 
+La distribución acumulada se obtiene integrando la densidad:
+
+\[
+F_T(d)=\int_a^d f_T(t)\,dt.
+\]
+
+Esta integral suma el área bajo la curva hasta el plazo `d`. Su resultado es una
+probabilidad, por lo que siempre está entre 0 y 1.
+
+La esperanza utiliza otra integral:
+
+\[
+\operatorname{E}[T]=\int_a^b t\,f_T(t)\,dt.
+\]
+
+En este caso no se acumula solo área. Cada posible duración `t` se pondera por
+su densidad `f_T(t)`. Por eso el resultado no es una probabilidad, sino una
+duración media. Conceptualmente, puede interpretarse como el centro de equilibrio
+de la distribución.
+
+La mediana responde a una pregunta diferente. Es el valor que deja un 50 % de
+probabilidad acumulada:
+
+\[
+P(T\leq \operatorname{Mediana})=0{,}5.
+\]
+
+Por tanto, la mediana es un plazo central probabilístico, mientras que la
+esperanza es un promedio ponderado por todos los escenarios. En distribuciones
+asimétricas, como puede ocurrir en PERT, ambas no tienen por qué coincidir. Si
+existe una cola hacia duraciones altas, los retrasos poco frecuentes pero
+importantes desplazan la esperanza hacia la derecha.
+
+Para resumir una duración media o agregar duraciones esperadas suele utilizarse
+la esperanza. Para expresar un plazo con una probabilidad concreta de no ser
+superado se utilizan cuantiles; la mediana es simplemente el cuantil del 50 %.
+
 El cuantil de nivel `p` satisface:
 
 \[

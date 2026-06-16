@@ -108,6 +108,43 @@ def distribution_figure(a: float, m: float, b: float, concentration: float) -> g
     return fig
 
 
+def cumulative_figure(a: float, m: float, b: float, concentration: float) -> go.Figure:
+    x = np.linspace(a, b, 700)
+    y = beta_pert_cdf(x, a, m, b, concentration)
+    stats = calculate_pert_parameters(a, m, b, concentration)
+    median = beta_pert_ppf(0.5, a, m, b, concentration)
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=x,
+            y=y,
+            mode="lines",
+            name="Distribución acumulada",
+            hovertemplate="Duración: %{x:.3f}<br>P(T ≤ duración): %{y:.4f}<extra></extra>",
+        )
+    )
+    markers = [
+        (m, beta_pert_cdf(m, a, m, b, concentration), "Moda, m", "dot"),
+        (median, 0.5, "Mediana", "dash"),
+        (stats.beta_mean, beta_pert_cdf(stats.beta_mean, a, m, b, concentration), "Esperanza", "solid"),
+    ]
+    for x_value, y_value, label, dash in markers:
+        fig.add_vline(x=x_value, line_dash=dash, annotation_text=label, annotation_position="bottom")
+        fig.add_hline(y=y_value, line_dash=dash, opacity=0.35)
+
+    fig.update_layout(
+        title="Integral acumulada de la densidad",
+        xaxis_title="Duración",
+        yaxis_title="Probabilidad acumulada",
+        yaxis=dict(range=[0, 1]),
+        hovermode="x unified",
+        legend_orientation="h",
+        margin=dict(l=30, r=20, t=65, b=30),
+    )
+    return fig
+
+
 def probability_figure(
     a: float,
     m: float,
@@ -319,6 +356,60 @@ with main_tabs[1]:
     metric_cols[4].metric("Punto medio", f"{format_number((a+b)/2)} {unit}")
 
     st.plotly_chart(distribution_figure(a, m, b, concentration), width="stretch")
+
+    st.subheader("La integral de la densidad")
+    st.write(
+        "La curva anterior representa la densidad: no da probabilidades por altura, sino por áreas. "
+        "Al integrar esa densidad desde el valor optimista hasta una duración concreta se obtiene la "
+        "probabilidad acumulada de terminar antes de esa duración."
+    )
+    st.latex(r"F(d)=P(T\leq d)=\int_a^d f(t)\,dt")
+    st.plotly_chart(cumulative_figure(a, m, b, concentration), width="stretch")
+
+    integral_cols = st.columns(2)
+    with integral_cols[0]:
+        st.markdown("**Integral acumulada**")
+        st.write(
+            "Suma el área bajo la densidad hasta un punto concreto. Su resultado siempre está entre 0 y 1 "
+            "y responde a preguntas del tipo: «¿qué probabilidad hay de terminar antes de este plazo?»."
+        )
+    with integral_cols[1]:
+        st.markdown("**Integral de esperanza**")
+        st.write(
+            "Suma también toda la distribución, pero ponderando cada duración por su propio valor. "
+            "Por eso no produce una probabilidad, sino una duración media o centro de equilibrio."
+        )
+        st.latex(r"E[T]=\int_a^b t\,f(t)\,dt")
+
+    st.info(
+        "Conclusión típica: la duración más probable, la mediana y la esperanza pueden ser distintas. "
+        "Cuando la distribución tiene cola hacia duraciones altas, la esperanza suele desplazarse hacia la derecha "
+        "respecto a la moda, porque esos retrasos poco frecuentes pesan en el promedio."
+    )
+
+    st.subheader("Esperanza o mediana: ¿qué resume cada una?")
+    summary_cols = st.columns(2)
+    with summary_cols[0]:
+        st.markdown("**Mediana**")
+        st.write(
+            "Es la duración que deja un 50 % de probabilidad a cada lado. Responde a la pregunta: "
+            "«¿qué plazo tengo la misma probabilidad de superar que de no superar?»."
+        )
+        st.latex(r"P(T\leq \operatorname{Mediana})=0{,}5")
+    with summary_cols[1]:
+        st.markdown("**Esperanza o media Beta-PERT**")
+        st.write(
+            "Es el promedio teórico a largo plazo. Tiene en cuenta todos los escenarios, incluidos retrasos "
+            "poco frecuentes pero importantes, porque cada duración se pondera por su probabilidad."
+        )
+        st.latex(r"E[T]=\int_a^b t\,f(t)\,dt")
+
+    st.write(
+        "En planificación se usa a menudo la esperanza para comparar alternativas, agregar duraciones esperadas "
+        "o estimar cargas medias. La mediana es útil para interpretar el punto central de la distribución, "
+        "pero como plazo de compromiso implica aceptar que aproximadamente la mitad de los casos podrían superarlo. "
+        "Para compromisos más prudentes conviene mirar cuantiles superiores, como el 80 %, 90 % o 95 %."
+    )
 
     interpretation_cols = st.columns(2)
     with interpretation_cols[0]:
